@@ -1,10 +1,11 @@
-"""AI-powered email processing using OpenAI."""
+"""AI-powered email processing using Google Gemini."""
 
 import logging
 from dataclasses import dataclass
 from typing import List
 
-from openai import OpenAI
+from google import genai
+from google.genai import types
 
 from .config import Config
 
@@ -68,11 +69,11 @@ class ProcessedEmail:
 
 
 class AIProcessor:
-    """Categorises customer emails and generates AI-powered responses."""
+    """Categorises customer emails and generates Gemini-powered responses."""
 
     def __init__(self, config: Config) -> None:
         self._config = config
-        self._client = OpenAI(api_key=config.openai_api_key)
+        self._client = genai.Client(api_key=config.gemini_api_key)
 
     def process(self, subject: str, body: str) -> ProcessedEmail:
         """Categorise *subject*/*body* and generate an appropriate reply.
@@ -105,16 +106,16 @@ class AIProcessor:
             subject=subject,
             body=body[:2000],  # Truncate to avoid excessive token usage
         )
-        response = self._client.chat.completions.create(
-            model=self._config.openai_model,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0,
-            max_tokens=20,
+        response = self._client.models.generate_content(
+            model=self._config.gemini_model,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                temperature=0,
+                max_output_tokens=20,
+            ),
         )
-        raw = response.choices[0].message.content.strip().lower()
+        raw = response.text.strip().lower()
         # Validate against known categories; default to "other"
         for cat in CATEGORIES:
             if cat in raw:
@@ -128,16 +129,16 @@ class AIProcessor:
             subject=subject,
             body=body[:3000],
         )
-        response = self._client.chat.completions.create(
-            model=self._config.openai_model,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.7,
-            max_tokens=600,
+        response = self._client.models.generate_content(
+            model=self._config.gemini_model,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                temperature=0.7,
+                max_output_tokens=600,
+            ),
         )
-        return response.choices[0].message.content.strip()
+        return response.text.strip()
 
     @staticmethod
     def _build_reply_subject(subject: str) -> str:

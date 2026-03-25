@@ -11,7 +11,7 @@ from src.ai_processor import ProcessedEmail
 
 def _make_config() -> Config:
     cfg = Config()
-    cfg.openai_api_key = "sk-test"
+    cfg.gemini_api_key = "AIza-test-key"
     cfg.imap_username = "user@example.com"
     cfg.imap_password = "secret"
     cfg.smtp_username = "user@example.com"
@@ -86,7 +86,7 @@ class TestEmailAgent(unittest.TestCase):
     def test_run_once_handles_processing_error(self):
         msgs = [_make_email("1")]
         agent, reader, sender, processor = self._make_agent(messages=msgs)
-        processor.process.side_effect = RuntimeError("OpenAI unavailable")
+        processor.process.side_effect = RuntimeError("Gemini unavailable")
 
         summary = agent.run_once()
 
@@ -94,14 +94,14 @@ class TestEmailAgent(unittest.TestCase):
         self.assertEqual(summary.emails_processed, 0)
         self.assertEqual(summary.emails_failed, 1)
         self.assertFalse(summary.results[0].response_sent)
-        self.assertIn("OpenAI unavailable", summary.results[0].error)
+        self.assertIn("Gemini unavailable", summary.results[0].error)
 
     def test_run_once_disconnects_on_error(self):
         cfg = _make_config()
         mock_reader = MagicMock()
         mock_reader.fetch_unread.side_effect = RuntimeError("Connection lost")
 
-        agent = EmailAgent(config=cfg, reader=mock_reader)
+        agent = EmailAgent(config=cfg, reader=mock_reader, processor=MagicMock())
 
         with self.assertRaises(RuntimeError):
             agent.run_once()

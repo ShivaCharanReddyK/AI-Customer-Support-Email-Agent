@@ -12,9 +12,9 @@ load_dotenv()
 class Config:
     """Holds all runtime configuration sourced from environment variables."""
 
-    # OpenAI
-    openai_api_key: str = field(default_factory=lambda: os.getenv("OPENAI_API_KEY", ""))
-    openai_model: str = field(default_factory=lambda: os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"))
+    # Google Gemini AI
+    gemini_api_key: str = field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""))
+    gemini_model: str = field(default_factory=lambda: os.getenv("GEMINI_MODEL", "gemini-1.5-flash"))
 
     # IMAP
     imap_host: str = field(default_factory=lambda: os.getenv("IMAP_HOST", "imap.gmail.com"))
@@ -43,7 +43,7 @@ class Config:
     def validate(self) -> None:
         """Raise ValueError if required configuration is missing."""
         required = {
-            "OPENAI_API_KEY": self.openai_api_key,
+            "GEMINI_API_KEY": self.gemini_api_key,
             "IMAP_USERNAME": self.imap_username,
             "IMAP_PASSWORD": self.imap_password,
             "SMTP_USERNAME": self.smtp_username,
